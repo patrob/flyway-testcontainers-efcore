@@ -1,0 +1,25 @@
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    platform: "linux/amd64"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    container_name: "postgres-db"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 2s
+
+  flyway:
+    image: "flyway/flyway:10-alpine"
+    platform: "linux/amd64"
+    container_name: "flyway"
+    command: -url=jdbc:postgresql://postgres-db:5432/postgres -user=postgres -password=postgres -connectRetries=20 -placeholders.env=local migrate
+    volumes:
+      - ./flyway/sql/:/flyway/sql
+    depends_on:
+      - postgres-db
